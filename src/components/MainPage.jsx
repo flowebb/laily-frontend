@@ -1,64 +1,50 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Navbar from './Navbar';
+import { MAX_WIDTH } from '../constants/layout';
 
 const MainPage = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
-    // 토큰 확인 및 유저 정보 가져오기
-    const fetchUserInfo = async () => {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const response = await fetch('http://localhost:5000/api/auth/me', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.user) {
-          setUser(data.user);
-        } else {
-          // 토큰이 유효하지 않으면 제거
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-        }
-      } catch (error) {
-        console.error('유저 정보 가져오기 실패:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      } finally {
-        setLoading(false);
-      }
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
     };
 
-    fetchUserInfo();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleSignup = () => {
-    navigate('/signup');
+  // Mock product data
+  const bestProducts = Array.from({ length: 8 }, (_, i) => ({
+    id: i + 1,
+    name: '상품명',
+    price: '가격',
+    image: `https://via.placeholder.com/300x400?text=Product+${i + 1}`,
+  }));
+
+  const newArrivals = Array.from({ length: 8 }, (_, i) => ({
+    id: i + 9,
+    name: '상품명',
+    price: '가격',
+    image: `https://via.placeholder.com/300x400?text=New+${i + 1}`,
+  }));
+
+  const recommendProducts = Array.from({ length: 4 }, (_, i) => ({
+    id: i + 17,
+    name: '상품명',
+    price: '가격',
+    image: `https://via.placeholder.com/300x400?text=Recommend+${i + 1}`,
+  }));
+
+  const handlePrevSlide = () => {
+    setCurrentSlide((prev) => (prev === 0 ? 1 : prev - 1));
   };
 
-  const handleLogin = () => {
-    navigate('/login');
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    alert('로그아웃되었습니다.');
+  const handleNextSlide = () => {
+    setCurrentSlide((prev) => (prev === 1 ? 0 : prev + 1));
   };
 
   return (
@@ -67,150 +53,621 @@ const MainPage = () => {
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#fff',
       }}
     >
-      {/* Header */}
-      <header
-        style={{
-          backgroundColor: 'white',
-          padding: '1rem 2rem',
-          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
-          Laily
-        </h1>
-        {!loading && user ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ fontSize: '0.9rem', color: '#333' }}>
-              {user.name}님 반갑습니다.
-            </span>
-            <button
-              onClick={handleLogout}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#000',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                cursor: 'pointer',
-              }}
-            >
-              로그아웃
-            </button>
-          </div>
-        ) : !loading ? (
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              onClick={handleLogin}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#000',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                cursor: 'pointer',
-              }}
-            >
-              로그인
-            </button>
-            <button
-              onClick={handleSignup}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: 'transparent',
-                color: '#000',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                cursor: 'pointer',
-              }}
-            >
-              회원가입
-            </button>
-          </div>
-        ) : null}
-      </header>
+      <Navbar />
 
-      {/* Main Content */}
-      <div
+      {/* Main Banner/Carousel */}
+      <section
         style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '2rem',
-          flex: 1,
+          width: '100%',
+          maxWidth: MAX_WIDTH,
+          margin: '0 auto',
+          position: 'relative',
+          marginTop: '2rem',
+          marginBottom: '4rem',
         }}
       >
         <div
           style={{
-            maxWidth: '500px',
+            position: 'relative',
             width: '100%',
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '2.5rem',
-            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
           }}
         >
-          <h1 style={{ marginTop: 0, marginBottom: '2rem', fontSize: '2.5rem', fontWeight: 'bold' }}>
-            Laily
-          </h1>
-          <p style={{ marginBottom: '2rem', fontSize: '1.1rem', color: '#666' }}>
-            쇼핑몰에 오신 것을 환영합니다
-          </p>
-          {!user && (
-            <>
-              <button
-                onClick={handleLogin}
+          {/* Main Carousel */}
+          {!isMobile && (
+            <div
+              style={{
+                flex: 1,
+                position: 'relative',
+                display: 'flex',
+                gap: '1rem',
+                overflow: 'hidden',
+              }}
+            >
+              <div
                 style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  backgroundColor: '#000',
-                  color: 'white',
+                  flex: 1,
+                  height: '500px',
+                  backgroundColor: '#f0f0f0',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                }}
+              >
+                <img
+                  src="https://via.placeholder.com/600x500?text=Model+1"
+                  alt="Model 1"
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+              </div>
+              <div
+                style={{
+                  flex: 1,
+                  height: '500px',
+                  backgroundColor: '#f0f0f0',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                }}
+              >
+                <img
+                  src="https://via.placeholder.com/600x500?text=Model+2"
+                  alt="Model 2"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Mobile Carousel */}
+          {isMobile && (
+            <div
+              style={{
+                flex: 1,
+                position: 'relative',
+                height: '400px',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  transform: `translateX(-${currentSlide * 100}%)`,
+                  transition: 'transform 0.3s ease',
+                  height: '100%',
+                }}
+              >
+                <div
+                  style={{
+                    minWidth: '100%',
+                    height: '100%',
+                    backgroundColor: '#f0f0f0',
+                  }}
+                >
+                  <img
+                    src="https://via.placeholder.com/400x400?text=Model+1"
+                    alt="Model 1"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+                <div
+                  style={{
+                    minWidth: '100%',
+                    height: '100%',
+                    backgroundColor: '#f0f0f0',
+                  }}
+                >
+                  <img
+                    src="https://via.placeholder.com/400x400?text=Model+2"
+                    alt="Model 2"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+              </div>
+
+              {/* Carousel Controls */}
+              <button
+                onClick={handlePrevSlide}
+                style={{
+                  position: 'absolute',
+                  left: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'rgba(255, 255, 255, 0.8)',
                   border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: '500',
+                  borderRadius: '50%',
+                  width: '40px',
+                  height: '40px',
                   cursor: 'pointer',
-                  marginBottom: '0.75rem',
+                  fontSize: '1.2rem',
                 }}
               >
-                로그인
+                ‹
               </button>
               <button
-                onClick={handleSignup}
+                onClick={handleNextSlide}
                 style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  backgroundColor: 'transparent',
-                  color: '#000',
-                  border: '1px solid #ddd',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: '500',
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '40px',
+                  height: '40px',
                   cursor: 'pointer',
+                  fontSize: '1.2rem',
                 }}
               >
-                회원가입
+                ›
               </button>
-            </>
+
+              {/* Pagination Dots */}
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '10px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  display: 'flex',
+                  gap: '8px',
+                }}
+              >
+                {[0, 1].map((dot) => (
+                  <div
+                    key={dot}
+                    style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: dot === currentSlide ? '#000' : '#ccc',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
           )}
         </div>
-      </div>
+      </section>
+
+      {/* BEST PRODUCT Section */}
+      <section
+        style={{
+          width: '100%',
+          maxWidth: MAX_WIDTH,
+          margin: '0 auto',
+          padding: isMobile ? '2rem 0' : '4rem 0',
+        }}
+      >
+        <h2
+          style={{
+            textAlign: 'center',
+            fontSize: isMobile ? '1.5rem' : '2rem',
+            fontWeight: 'bold',
+            marginBottom: '2rem',
+          }}
+        >
+          BEST PRODUCT
+        </h2>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile
+              ? 'repeat(2, 1fr)'
+              : 'repeat(4, 1fr)',
+            gap: isMobile ? '1rem' : '2rem',
+            justifyContent: 'center',
+            justifyItems: 'center',
+          }}
+        >
+          {bestProducts.map((product) => (
+            <div
+              key={product.id}
+              style={{
+                position: 'relative',
+                cursor: 'pointer',
+                width: '100%',
+                maxWidth: '100%',
+              }}
+            >
+              <div
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  paddingTop: '133%',
+                  backgroundColor: '#f0f0f0',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+            <button
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    background: 'rgba(255, 255, 255, 0.8)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '30px',
+                    height: '30px',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                  }}
+                >
+                  ♡
+                </button>
+              </div>
+              <p style={{ margin: '0.5rem 0', fontSize: '0.9rem' }}>{product.name}</p>
+              <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 'bold' }}>{product.price}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* NEW ARRIVAL Section */}
+      <section
+        style={{
+          width: '100%',
+          maxWidth: MAX_WIDTH,
+          margin: '0 auto',
+          padding: isMobile ? '2rem 0' : '4rem 0',
+        }}
+      >
+        <h2
+          style={{
+            textAlign: 'center',
+            fontSize: isMobile ? '1.5rem' : '2rem',
+            fontWeight: 'bold',
+            marginBottom: '2rem',
+          }}
+        >
+          NEW ARRIVAL
+        </h2>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile
+              ? 'repeat(2, 1fr)'
+              : 'repeat(4, 1fr)',
+            gap: isMobile ? '1rem' : '2rem',
+            justifyContent: 'center',
+            justifyItems: 'center',
+          }}
+        >
+          {newArrivals.map((product) => (
+            <div
+              key={product.id}
+              style={{
+                position: 'relative',
+                cursor: 'pointer',
+                width: '100%',
+                maxWidth: '100%',
+              }}
+            >
+              <div
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  paddingTop: '133%',
+                  backgroundColor: '#f0f0f0',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+                <button
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    background: 'rgba(255, 255, 255, 0.8)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '30px',
+                    height: '30px',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                  }}
+                >
+                  ♡
+            </button>
+          </div>
+              <p style={{ margin: '0.5rem 0', fontSize: '0.9rem' }}>{product.name}</p>
+              <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 'bold' }}>{product.price}</p>
+            </div>
+          ))}
+        </div>
+        {!isMobile && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '1rem',
+              marginTop: '2rem',
+            }}
+          >
+            <button
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '1.2rem',
+              }}
+            >
+              ‹
+            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {[1, 2, 3].map((page) => (
+                <div
+                  key={page}
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: page === 1 ? '#000' : '#ccc',
+                  }}
+                />
+              ))}
+            </div>
+            <button
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '1.2rem',
+              }}
+            >
+              ›
+            </button>
+          </div>
+        )}
+      </section>
+
+      {/* LOOKBOOK Section */}
+      <section
+        style={{
+          width: '100%',
+          maxWidth: MAX_WIDTH,
+          margin: '0 auto',
+          padding: isMobile ? '2rem 0' : '4rem 0',
+        }}
+      >
+        <h2
+          style={{
+            textAlign: 'center',
+            fontSize: isMobile ? '1.5rem' : '2rem',
+            fontWeight: 'bold',
+            marginBottom: '2rem',
+          }}
+        >
+          LOOKBOOK
+        </h2>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+            gap: isMobile ? '1rem' : '2rem',
+          }}
+        >
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              paddingTop: '133%',
+              backgroundColor: '#f0f0f0',
+              borderRadius: '8px',
+              overflow: 'hidden',
+            }}
+          >
+            <img
+              src="https://via.placeholder.com/500x600?text=Lookbook+1"
+              alt="Lookbook 1"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+          </div>
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              paddingTop: '133%',
+              backgroundColor: '#f0f0f0',
+              borderRadius: '8px',
+              overflow: 'hidden',
+            }}
+          >
+            <img
+              src="https://via.placeholder.com/500x600?text=For+your+daily+look"
+              alt="Lookbook 2"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '20px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                color: 'white',
+                fontSize: isMobile ? '1rem' : '1.5rem',
+                fontWeight: 'bold',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+              }}
+            >
+              For your daily look
+            </div>
+          </div>
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              paddingTop: '133%',
+              backgroundColor: '#f0f0f0',
+              borderRadius: '8px',
+              overflow: 'hidden',
+            }}
+          >
+            <img
+              src="https://via.placeholder.com/500x600?text=Lookbook+3"
+              alt="Lookbook 3"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* RECOMMEND Section */}
+      <section
+        style={{
+            width: '100%',
+          maxWidth: MAX_WIDTH,
+          margin: '0 auto',
+          padding: isMobile ? '2rem 0' : '4rem 0',
+        }}
+      >
+        <h2
+          style={{
+            textAlign: 'center',
+            fontSize: isMobile ? '1.5rem' : '2rem',
+            fontWeight: 'bold',
+            marginBottom: '2rem',
+          }}
+        >
+          RECOMMEND
+        </h2>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile
+              ? 'repeat(2, 1fr)'
+              : 'repeat(4, 1fr)',
+            gap: isMobile ? '1rem' : '2rem',
+            justifyContent: 'center',
+            justifyItems: 'center',
+          }}
+        >
+          {recommendProducts.map((product) => (
+            <div
+              key={product.id}
+              style={{
+                position: 'relative',
+                cursor: 'pointer',
+                width: '100%',
+                maxWidth: '100%',
+              }}
+            >
+              <div
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  paddingTop: '133%',
+                  backgroundColor: '#f0f0f0',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              <button
+                style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    background: 'rgba(255, 255, 255, 0.8)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '30px',
+                    height: '30px',
+                    cursor: 'pointer',
+                  fontSize: '1rem',
+                }}
+              >
+                  ♡
+              </button>
+              </div>
+              <p style={{ margin: '0.5rem 0', fontSize: '0.9rem' }}>{product.name}</p>
+              <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 'bold' }}>{product.price}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer
+        style={{
+          width: '100%',
+          maxWidth: MAX_WIDTH,
+          margin: '0 auto',
+          padding: '2rem',
+          textAlign: 'center',
+          borderTop: '1px solid #eee',
+          marginTop: '4rem',
+        }}
+      >
+        <p style={{ margin: 0, fontSize: '0.9rem', color: '#666' }}>HATBLUE © 2024</p>
+      </footer>
     </div>
   );
 };
 
 export default MainPage;
-
