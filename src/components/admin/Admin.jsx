@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MAX_WIDTH } from '../constants/layout';
+import { MAX_WIDTH } from '../../constants/layout';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -584,3 +584,4 @@ const Admin = () => {
 };
 
 export default Admin;
+
