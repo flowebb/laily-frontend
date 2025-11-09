@@ -8,7 +8,7 @@ import Bottom from './components/menu/Bottom';
 import Acc from './components/menu/Acc';
 import Dress from './components/menu/Dress';
 import Admin from './components/admin/Admin';
-import ProductRegistration from './components/admin/ProductRegistration';
+import ProductRegistration from './components/admin/newProductRegister/ProductRegistration';
 import MyPage from './components/MyPage';
 import Cart from './components/Cart';
 import Search from './components/Search';
