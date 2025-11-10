@@ -1,4 +1,4 @@
-const ProductBasicInfo = ({ formData, handleChange, isMobile }) => {
+const ProductBasicInfo = ({ formData, handleChange, isMobile, errors = {} }) => {
   return (
     <div>
       {/* SKU */}
@@ -9,10 +9,10 @@ const ProductBasicInfo = ({ formData, handleChange, isMobile }) => {
             marginBottom: '0.6rem',
             fontSize: '1.15rem',
             fontWeight: '600',
-            color: '#333',
+            color: errors.sku ? '#ef4444' : '#333',
           }}
         >
-          SKU
+          SKU {errors.sku && <span style={{ color: '#ef4444', fontSize: '0.9rem' }}>*</span>}
         </label>
         <input
           type="text"
@@ -24,12 +24,18 @@ const ProductBasicInfo = ({ formData, handleChange, isMobile }) => {
           style={{
             width: '100%',
             padding: '0.9rem',
-            border: '1px solid #e0e0e0',
+            border: errors.sku ? '2px solid #ef4444' : '1px solid #e0e0e0',
             borderRadius: '5px',
             fontSize: '1.15rem',
             outline: 'none',
+            backgroundColor: errors.sku ? '#fef2f2' : 'white',
           }}
         />
+        {errors.sku && (
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#ef4444' }}>
+            {errors.sku}
+          </p>
+        )}
       </div>
 
       {/* 상품명 */}
@@ -40,10 +46,10 @@ const ProductBasicInfo = ({ formData, handleChange, isMobile }) => {
             marginBottom: '0.6rem',
             fontSize: '1.15rem',
             fontWeight: '600',
-            color: '#333',
+            color: errors.name ? '#ef4444' : '#333',
           }}
         >
-          상품명
+          상품명 {errors.name && <span style={{ color: '#ef4444', fontSize: '0.9rem' }}>*</span>}
         </label>
         <input
           type="text"
@@ -55,12 +61,18 @@ const ProductBasicInfo = ({ formData, handleChange, isMobile }) => {
           style={{
             width: '100%',
             padding: '0.9rem',
-            border: '1px solid #e0e0e0',
+            border: errors.name ? '2px solid #ef4444' : '1px solid #e0e0e0',
             borderRadius: '5px',
             fontSize: '1.15rem',
             outline: 'none',
+            backgroundColor: errors.name ? '#fef2f2' : 'white',
           }}
         />
+        {errors.name && (
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#ef4444' }}>
+            {errors.name}
+          </p>
+        )}
       </div>
 
       {/* 정가 */}
@@ -71,10 +83,10 @@ const ProductBasicInfo = ({ formData, handleChange, isMobile }) => {
             marginBottom: '0.6rem',
             fontSize: '1.15rem',
             fontWeight: '600',
-            color: '#333',
+            color: errors.originalPrice ? '#ef4444' : '#333',
           }}
         >
-          정가 (원가)
+          정가 (원가) {errors.originalPrice && <span style={{ color: '#ef4444', fontSize: '0.9rem' }}>*</span>}
         </label>
         <input
           type="number"
@@ -88,83 +100,90 @@ const ProductBasicInfo = ({ formData, handleChange, isMobile }) => {
           style={{
             width: '100%',
             padding: '0.9rem',
-            border: '1px solid #e0e0e0',
+            border: errors.originalPrice ? '2px solid #ef4444' : '1px solid #e0e0e0',
             borderRadius: '5px',
             fontSize: '1.15rem',
             outline: 'none',
+            backgroundColor: errors.originalPrice ? '#fef2f2' : 'white',
           }}
         />
+        {errors.originalPrice && (
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#ef4444' }}>
+            {errors.originalPrice}
+          </p>
+        )}
       </div>
 
       {/* 할인율 & 할인가 */}
-      <div style={{ marginBottom: '1.8rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-        <div>
-          <label
-            style={{
-              display: 'block',
-              marginBottom: '0.6rem',
-              fontSize: '1.15rem',
-              fontWeight: '600',
-              color: '#333',
-            }}
-          >
-            할인율 (%)
-          </label>
-          <input
-            type="number"
-            name="discountPercentage"
-            value={formData.discountPercentage}
-            onChange={handleChange}
-            placeholder="20"
-            min="0"
-            max="100"
-            step="1"
-            style={{
-              width: '100%',
-              padding: '0.9rem',
-              border: '1px solid #e0e0e0',
-              borderRadius: '5px',
-              fontSize: '1.15rem',
-              outline: 'none',
-            }}
-          />
-          <p style={{ margin: '0.3rem 0 0 0', fontSize: '0.9rem', color: '#666' }}>
-            할인율을 입력하면 할인가가 자동 계산됩니다
-          </p>
+      <div style={{ marginBottom: '1.8rem' }}>
+        <label
+          style={{
+            display: 'block',
+            marginBottom: '0.6rem',
+            fontSize: '1.15rem',
+            fontWeight: '600',
+            color: errors.discount ? '#ef4444' : '#333',
+          }}
+        >
+          할인 정보 {errors.discount && <span style={{ color: '#ef4444', fontSize: '0.9rem' }}>*</span>}
+        </label>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+          <div>
+            <input
+              type="number"
+              name="discountPercentage"
+              value={formData.discountPercentage}
+              onChange={handleChange}
+              placeholder="20"
+              min="0"
+              max="100"
+              step="1"
+              style={{
+                width: '100%',
+                padding: '0.9rem',
+                border: errors.discount ? '2px solid #ef4444' : '1px solid #e0e0e0',
+                borderRadius: '5px',
+                fontSize: '1.15rem',
+                outline: 'none',
+                backgroundColor: errors.discount ? '#fef2f2' : 'white',
+              }}
+            />
+            <p style={{ margin: '0.3rem 0 0 0', fontSize: '0.9rem', color: '#666' }}>
+              할인율 (%)
+            </p>
+          </div>
+          <div>
+            <input
+              type="number"
+              name="discountedPrice"
+              value={formData.discountedPrice}
+              onChange={handleChange}
+              placeholder="29600"
+              min="0"
+              step="1"
+              style={{
+                width: '100%',
+                padding: '0.9rem',
+                border: errors.discount ? '2px solid #ef4444' : '1px solid #e0e0e0',
+                borderRadius: '5px',
+                fontSize: '1.15rem',
+                outline: 'none',
+                backgroundColor: errors.discount ? '#fef2f2' : 'white',
+              }}
+            />
+            <p style={{ margin: '0.3rem 0 0 0', fontSize: '0.9rem', color: '#666' }}>
+              할인가
+            </p>
+          </div>
         </div>
-        <div>
-          <label
-            style={{
-              display: 'block',
-              marginBottom: '0.6rem',
-              fontSize: '1.15rem',
-              fontWeight: '600',
-              color: '#333',
-            }}
-          >
-            할인가
-          </label>
-          <input
-            type="number"
-            name="discountedPrice"
-            value={formData.discountedPrice}
-            onChange={handleChange}
-            placeholder="29600"
-            min="0"
-            step="1"
-            style={{
-              width: '100%',
-              padding: '0.9rem',
-              border: '1px solid #e0e0e0',
-              borderRadius: '5px',
-              fontSize: '1.15rem',
-              outline: 'none',
-            }}
-          />
-          <p style={{ margin: '0.3rem 0 0 0', fontSize: '0.9rem', color: '#666' }}>
-            할인가를 입력하면 할인율이 자동 계산됩니다
+        {errors.discount && (
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#ef4444' }}>
+            {errors.discount}
           </p>
-        </div>
+        )}
+        <p style={{ margin: '0.3rem 0 0 0', fontSize: '0.9rem', color: '#666' }}>
+          할인율 또는 할인가 중 하나를 입력해주세요
+        </p>
       </div>
 
       {/* 가격 미리보기 */}
@@ -206,10 +225,10 @@ const ProductBasicInfo = ({ formData, handleChange, isMobile }) => {
             marginBottom: '0.6rem',
             fontSize: '1.15rem',
             fontWeight: '600',
-            color: '#333',
+            color: errors.category ? '#ef4444' : '#333',
           }}
         >
-          카테고리
+          카테고리 {errors.category && <span style={{ color: '#ef4444', fontSize: '0.9rem' }}>*</span>}
         </label>
         <select
           name="category"
@@ -219,11 +238,11 @@ const ProductBasicInfo = ({ formData, handleChange, isMobile }) => {
           style={{
             width: '100%',
             padding: '0.9rem',
-            border: '1px solid #e0e0e0',
+            border: errors.category ? '2px solid #ef4444' : '1px solid #e0e0e0',
             borderRadius: '5px',
             fontSize: '1.15rem',
             outline: 'none',
-            backgroundColor: 'white',
+            backgroundColor: errors.category ? '#fef2f2' : 'white',
             cursor: 'pointer',
           }}
         >
@@ -234,6 +253,11 @@ const ProductBasicInfo = ({ formData, handleChange, isMobile }) => {
           <option value="DRESS">DRESS</option>
           <option value="ACC">ACC</option>
         </select>
+        {errors.category && (
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#ef4444' }}>
+            {errors.category}
+          </p>
+        )}
       </div>
     </div>
   );

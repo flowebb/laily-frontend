@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const ProductImageUpload = ({ formData, handleChange }) => {
+const ProductImageUpload = ({ formData, handleChange, errors = {} }) => {
   const [imageUrl, setImageUrl] = useState(formData.image || '');
 
   useEffect(() => {
@@ -85,10 +85,10 @@ const ProductImageUpload = ({ formData, handleChange }) => {
           marginBottom: '0.6rem',
           fontSize: '1.15rem',
           fontWeight: '600',
-          color: '#333',
+          color: errors.image ? '#ef4444' : '#333',
         }}
       >
-        메인 이미지
+        메인 이미지 {errors.image && <span style={{ color: '#ef4444', fontSize: '0.9rem' }}>*</span>}
       </label>
       <div
        
@@ -96,12 +96,13 @@ const ProductImageUpload = ({ formData, handleChange }) => {
         <button
           type="button"
           onClick={openCloudinaryWidget}
+          data-field="image"
           style={{
             padding: '0.6rem 1.2rem',
-            backgroundColor: '#faf8f8',
+            backgroundColor: errors.image ? '#fef2f2' : '#faf8f8',
             color: 'black',
             borderRadius: '5px',
-            border: '1px solid #e0e0e0',
+            border: errors.image ? '2px solid #ef4444' : '1px solid #e0e0e0',
             cursor: 'pointer',
             fontSize: '1.1rem',
             fontWeight: '500',
@@ -110,6 +111,11 @@ const ProductImageUpload = ({ formData, handleChange }) => {
         >
           메인 이미지 업로드
         </button>
+        {errors.image && (
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#ef4444' }}>
+            {errors.image}
+          </p>
+        )}
         
         {imageUrl && (
           <>

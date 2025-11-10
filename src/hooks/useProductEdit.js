@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
-export const useProductForm = () => {
+export const useProductEdit = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [submitting, setSubmitting] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(true);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -33,28 +34,70 @@ export const useProductForm = () => {
   });
   const [mainImageFile, setMainImageFile] = useState(null);
 
+  // 기존 상품 정보 불러오기
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/products/${id}`);
+        const data = await response.json();
+
+        if (response.ok && data.product) {
+          const product = data.product;
+          
+          // 폼 데이터 설정
+          setFormData({
+            name: product.name || '',
+            category: product.category || '',
+            originalPrice: product.price?.originalPrice?.toString() || '',
+            discountPercentage: product.price?.discountPercentage?.toString() || '',
+            discountedPrice: product.price?.discountedPrice?.toString() || '',
+            sku: product.sku || '',
+            image: product.image || '',
+            detailPage: product.detailPage || '',
+            description: product.description || '',
+            isNew: product.status?.includes('NEW') || false,
+            isSale: product.status?.includes('SALE') || false,
+            inStock: product.status?.includes('IN_STOCK') || false
+          });
+
+          // Variants 설정
+          if (product.variants && product.variants.length > 0) {
+            setVariants(product.variants.map(v => ({
+              color: v.color || '',
+              size: v.size || '',
+              stock: v.stock || 0,
+              image: v.image || '',
+              variantSku: v.variantSku || ''
+            })));
+          }
+
+          // Available colors and sizes
+          if (product.availableColors) {
+            setAvailableColors(product.availableColors);
+          }
+          if (product.availableSizes) {
+            setAvailableSizes(product.availableSizes);
+          }
+        } else {
+          alert('상품 정보를 불러올 수 없습니다.');
+          navigate('/admin/products');
+        }
+      } catch (error) {
+        console.error('상품 정보 가져오기 실패:', error);
+        alert('상품 정보를 불러오는 중 오류가 발생했습니다.');
+        navigate('/admin/products');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchProduct();
+    }
+  }, [id, navigate]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
-    // 에러 상태 초기화
-    if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-    
-    // 할인 정보 관련 필드 변경 시 discount 에러도 제거
-    if (name === 'discountPercentage' || name === 'discountedPrice') {
-      if (errors.discount) {
-        setErrors(prev => {
-          const newErrors = { ...prev };
-          delete newErrors.discount;
-          return newErrors;
-        });
-      }
-    }
     
     if (name === 'originalPrice' || name === 'discountPercentage' || name === 'discountedPrice') {
       const numValue = value === '' ? '' : parseFloat(value);
@@ -164,60 +207,24 @@ export const useProductForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // 에러 초기화
-    const newErrors = {};
-    
-    // 필수 필드 검증
-    if (!formData.name || formData.name.trim() === '') {
-      newErrors.name = '상품명을 입력해주세요.';
+    if (!formData.name || !formData.category || !formData.sku || !formData.image || !formData.detailPage) {
+      alert('모든 필수 필드를 입력해주세요.');
+      return;
     }
-    
-    if (!formData.category || formData.category.trim() === '') {
-      newErrors.category = '카테고리를 선택해주세요.';
-    }
-    
-    if (!formData.sku || formData.sku.trim() === '') {
-      newErrors.sku = 'SKU를 입력해주세요.';
-    }
-    
-    if (!formData.image || formData.image.trim() === '') {
-      newErrors.image = '상품 이미지를 업로드해주세요.';
-    }
-    
-    if (!formData.detailPage || formData.detailPage.trim() === '') {
-      newErrors.detailPage = '상세 페이지를 작성해주세요.';
-    }
-    
+
     const originalPrice = parseFloat(formData.originalPrice);
-    if (!formData.originalPrice || formData.originalPrice.trim() === '' || isNaN(originalPrice) || originalPrice < 0) {
-      newErrors.originalPrice = '정가는 0 이상의 숫자여야 합니다.';
+    if (isNaN(originalPrice) || originalPrice < 0) {
+      alert('정가는 0 이상의 숫자여야 합니다.');
+      return;
     }
 
     const discountPercentage = formData.discountPercentage !== '' ? parseFloat(formData.discountPercentage) : undefined;
     const discountedPrice = formData.discountedPrice !== '' ? parseFloat(formData.discountedPrice) : undefined;
 
     if (discountPercentage === undefined && discountedPrice === undefined) {
-      newErrors.discount = '할인율 또는 할인가 중 하나를 입력해주세요.';
-    }
-    
-    // 에러가 있으면 표시하고 첫 번째 에러 필드로 스크롤
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      
-      // 첫 번째 에러 필드로 스크롤
-      const firstErrorField = Object.keys(newErrors)[0];
-      const errorElement = document.querySelector(`[name="${firstErrorField}"]`) || 
-                          document.querySelector(`[data-field="${firstErrorField}"]`);
-      if (errorElement) {
-        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        errorElement.focus();
-      }
-      
+      alert('할인율 또는 할인가를 입력해주세요.');
       return;
     }
-    
-    // 에러 없으면 초기화
-    setErrors({});
 
     const status = [];
     if (formData.isNew) status.push('NEW');
@@ -278,8 +285,8 @@ export const useProductForm = () => {
         requestBody.status = status;
       }
 
-      const response = await fetch('http://localhost:5000/api/products', {
-        method: 'POST',
+      const response = await fetch(`http://localhost:5000/api/products/${id}`, {
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -290,35 +297,16 @@ export const useProductForm = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert('상품이 성공적으로 등록되었습니다.');
-        // 폼 초기화
-        setFormData({
-          name: '',
-          category: '',
-          originalPrice: '',
-          discountPercentage: '',
-          discountedPrice: '',
-          sku: '',
-          image: '',
-          detailPage: '',
-          description: '',
-          isNew: false,
-          isSale: false,
-          inStock: false
-        });
-        setVariants([]);
-        setAvailableColors([]);
-        setAvailableSizes([]);
-        setMainImageFile(null);
-        navigate('/admin');
+        alert('상품 정보가 성공적으로 수정되었습니다.');
+        navigate('/admin/products');
       } else {
         // 서버에서 보낸 에러 메시지 표시
-        const errorMessage = data.error || data.details || '상품 등록에 실패했습니다.';
-        alert(`상품 등록 실패: ${errorMessage}`);
+        const errorMessage = data.error || data.details || '상품 수정에 실패했습니다.';
+        alert(`상품 수정 실패: ${errorMessage}`);
       }
     } catch (error) {
-      console.error('상품 등록 실패:', error);
-      alert('상품 등록 중 오류가 발생했습니다.');
+      console.error('상품 수정 실패:', error);
+      alert('상품 수정 중 오류가 발생했습니다.');
     } finally {
       setSubmitting(false);
     }
@@ -330,7 +318,7 @@ export const useProductForm = () => {
     newVariant,
     mainImageFile,
     submitting,
-    errors,
+    loading,
     availableColors,
     availableSizes,
     handleChange,

@@ -1,6 +1,9 @@
+// Navbar.jsx
+// 사이트 상단 네비게이션 및 메뉴를 담당하는 컴포넌트
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { MAX_WIDTH } from '../constants/layout';
+import PromoBar from './PromoBar';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -90,15 +93,17 @@ const Navbar = () => {
   };
 
   return (
-    <header
-      style={{
-        backgroundColor: 'white',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000,
-        width: '100%',
-      }}
-    >
+    <>
+      <PromoBar />
+      <header
+        style={{
+          backgroundColor: 'white',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1000,
+          width: '100%',
+        }}
+      >
       <div
         style={{
           maxWidth: MAX_WIDTH,
@@ -432,6 +437,7 @@ const Navbar = () => {
         </nav>
       )}
     </header>
+    </>
   );
 };
 

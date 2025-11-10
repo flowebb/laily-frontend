@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { MAX_WIDTH } from '../../../constants/layout';
 import { useAuth } from '../../../hooks/useAuth';
 import { useProductForm } from '../../../hooks/useProductForm';
-import ProductFormHeader from './ProductFormHeader';
+import ProductManagement from '../ProductManagement';
 import ProductBasicInfo from './ProductBasicInfo';
 import ProductVariants from './ProductVariants';
 import ProductDescription from './ProductDescription';
-import ProductDetails from './ProductDetails';
+import ProductDetails from './ProductDetails/ProductDetails';
 import ProductImageUpload from './ProductImageUpload';
 import ProductStatus from './ProductStatus';
 import ProductFormActions from './ProductFormActions';
@@ -21,6 +21,7 @@ const ProductRegistration = () => {
     newVariant,
     mainImageFile,
     submitting,
+    errors,
     handleChange,
     handleVariantChange,
     addVariant,
@@ -48,7 +49,7 @@ const ProductRegistration = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      <ProductFormHeader />
+      <ProductManagement activeTab="register" />
 
       {/* Main Content */}
       <div
@@ -87,7 +88,8 @@ const ProductRegistration = () => {
                 <ProductBasicInfo 
                   formData={formData} 
                   handleChange={handleChange} 
-                  isMobile={isMobile} 
+                  isMobile={isMobile}
+                  errors={errors}
                 />
                 <ProductVariants 
                   variants={variants}
@@ -108,10 +110,12 @@ const ProductRegistration = () => {
                 <ProductDetails 
                   formData={formData}
                   handleChange={handleChange}
+                  errors={errors}
                 />
                 <ProductImageUpload 
                   formData={formData}
                   handleChange={handleChange}
+                  errors={errors}
                 />
                 <ProductStatus 
                   formData={formData}

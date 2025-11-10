@@ -8,10 +8,13 @@ import Bottom from './components/menu/Bottom';
 import Acc from './components/menu/Acc';
 import Dress from './components/menu/Dress';
 import Admin from './components/admin/Admin';
-import ProductRegistration from './components/admin/newProductRegister/ProductRegistration';
+import ProductList from './components/admin/ProductList/ProductList';
+import ProductEdit from './components/admin/ProductList/ProductEdit';
+import ProductRegistration from './components/admin/newProductRegistration/ProductRegistration';
 import MyPage from './components/MyPage';
 import Cart from './components/Cart';
 import Search from './components/Search';
+import ProductDetail from './components/ProductDetail';
 import './App.css';
 
 function App() {
@@ -27,10 +30,13 @@ function App() {
         <Route path="/acc" element={<Acc />} />
         <Route path="/dress" element={<Dress />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/admin/products" element={<ProductList />} />
         <Route path="/admin/products/new" element={<ProductRegistration />} />
+        <Route path="/admin/products/edit/:id" element={<ProductEdit />} />
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/products/:id" element={<ProductDetail />} />
       </Routes>
     </Router>
   );

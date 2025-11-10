@@ -10,6 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-alignment": "^47.2.0",
+    "@ckeditor/ckeditor5-build-classic": "^41.4.2",
+    "@ckeditor/ckeditor5-react": "^11.0.0",
+    "ckeditor5": "^47.2.0",
     "cors": "^2.8.5",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

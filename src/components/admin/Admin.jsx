@@ -7,6 +7,11 @@ const Admin = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isPromoBarModalOpen, setIsPromoBarModalOpen] = useState(false);
+  const [promoBarMessages, setPromoBarMessages] = useState([]);
+  const [newPromoBarText, setNewPromoBarText] = useState('');
+  const [promoBarActive, setPromoBarActive] = useState(true);
+  const [promoBarLoading, setPromoBarLoading] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -61,6 +66,178 @@ const Admin = () => {
 
     fetchUserInfo();
   }, [navigate]);
+
+  // 홍보바 설정 가져오기
+  const fetchPromoBar = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/settings/promo-bar');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.settings) {
+          const {
+            isActive: activeFlag = true,
+            messages: storedMessages = [],
+            currentValue,
+            value
+          } = data.settings;
+
+          let sanitizedMessages =
+            storedMessages && storedMessages.length > 0
+              ? storedMessages.map((msg) => ({
+                  _id: msg._id,
+                  text: msg.text || '',
+                  isActive: Boolean(msg.isActive)
+                }))
+              : [];
+
+          if (sanitizedMessages.length === 0) {
+            sanitizedMessages = [
+              {
+                text: currentValue || value ,
+                isActive: true
+              }
+            ];
+          }
+
+          if (!sanitizedMessages.some((msg) => msg.isActive)) {
+            sanitizedMessages[0].isActive = true;
+          }
+
+          setPromoBarMessages(sanitizedMessages);
+          setPromoBarActive(activeFlag);
+          setNewPromoBarText('');
+        }
+      }
+    } catch (error) {
+      console.error('홍보바 설정 가져오기 오류:', error);
+    }
+  };
+
+  // 홍보바 모달 열기
+  const handleOpenPromoBarModal = async () => {
+    await fetchPromoBar();
+    setIsPromoBarModalOpen(true);
+  };
+
+  // 홍보바 설정 저장
+  const handleSavePromoBar = async () => {
+    try {
+      setPromoBarLoading(true);
+      const token = localStorage.getItem('token');
+      const trimmedMessages = promoBarMessages
+        .map((msg) => ({
+          ...msg,
+          text: typeof msg.text === 'string' ? msg.text.trim() : ''
+        }))
+        .filter((msg) => msg.text.length > 0);
+
+      if (trimmedMessages.length === 0) {
+        alert('홍보바 문구를 최소 1개 이상 입력해 주세요.');
+        setPromoBarLoading(false);
+        return;
+      }
+
+      if (!trimmedMessages.some((msg) => msg.isActive)) {
+        trimmedMessages[0].isActive = true;
+      }
+
+      const activeMessage =
+        trimmedMessages.find((msg) => msg.isActive) || trimmedMessages[0];
+
+      const requestBody = {
+        value: activeMessage.text,
+        isActive: promoBarActive,
+        messages: trimmedMessages.map(({ text, isActive: messageActive }) => ({
+          text,
+          isActive: messageActive
+        }))
+      };
+
+      console.log('저장 요청 데이터:', requestBody);
+
+      const response = await fetch('http://localhost:5000/api/settings/promo-bar', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const data = await response.json();
+      console.log('서버 응답:', data);
+
+      if (response.ok && data.success) {
+        if (data.settings) {
+          const storedMessages = (data.settings.messages || []).map((msg) => ({
+            _id: msg._id,
+            text: msg.text || '',
+            isActive: Boolean(msg.isActive)
+          }));
+          if (storedMessages.length > 0) {
+            setPromoBarMessages(storedMessages);
+          }
+          setPromoBarActive(data.settings.isActive);
+        }
+        alert('홍보바 설정이 저장되었습니다.');
+        setIsPromoBarModalOpen(false);
+      } else {
+        const errorMsg = data.error || data.message || '홍보바 설정 저장에 실패했습니다.';
+        console.error('저장 실패:', errorMsg, data);
+        alert(`저장 실패: ${errorMsg}`);
+      }
+    } catch (error) {
+      console.error('홍보바 설정 저장 오류:', error);
+      alert('홍보바 설정 저장 중 오류가 발생했습니다.');
+    } finally {
+      setPromoBarLoading(false);
+    }
+  };
+
+  const handleAddPromoBarMessage = () => {
+    const trimmed = newPromoBarText.trim();
+    if (trimmed.length === 0) {
+      alert('추가할 홍보바 문구를 입력해 주세요.');
+      return;
+    }
+
+    setPromoBarMessages((prev) => {
+      const hasActive = prev.some((msg) => msg.isActive);
+      return [
+        ...prev,
+        {
+          text: trimmed,
+          isActive: prev.length === 0 || !hasActive
+        }
+      ];
+    });
+    setNewPromoBarText('');
+  };
+
+  const handleUpdatePromoBarMessage = (index, text) => {
+    setPromoBarMessages((prev) =>
+      prev.map((msg, idx) => (idx === index ? { ...msg, text } : msg))
+    );
+  };
+
+  const handleSetPromoBarActiveMessage = (index) => {
+    setPromoBarMessages((prev) =>
+      prev.map((msg, idx) => ({
+        ...msg,
+        isActive: idx === index ? !msg.isActive : msg.isActive
+      }))
+    );
+  };
+
+  const handleRemovePromoBarMessage = (index) => {
+    setPromoBarMessages((prev) => {
+      const updated = prev.filter((_, idx) => idx !== index);
+      if (updated.length > 0 && !updated.some((msg) => msg.isActive)) {
+        updated[0].isActive = true;
+      }
+      return updated;
+    });
+  };
 
   if (loading) {
     return (
@@ -577,8 +754,267 @@ const Admin = () => {
               쿠폰 발급 및 캠페인 설정
             </p>
           </div>
+
+          {/* 홍보바 설정 */}
+          <div
+            style={{
+              backgroundColor: 'white',
+              padding: '1.5rem',
+              borderRadius: '12px',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+              cursor: 'pointer',
+            }}
+            onClick={handleOpenPromoBarModal}
+          >
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                backgroundColor: '#8B7355',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.5rem',
+                marginBottom: '1rem',
+              }}
+            >
+              📢
+            </div>
+            <h3 style={{ margin: 0, marginBottom: '0.5rem', fontSize: '1.1rem', color: '#333', fontWeight: 'bold' }}>
+              프로모션 바 설정
+            </h3>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#666' }}>
+              상단 홍보바 문구 및 표시 여부 관리
+            </p>
+          </div>
         </div>
       </div>
+
+      {/* 홍보바 설정 모달 */}
+      {isPromoBarModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: isMobile ? '1rem' : '2rem',
+          }}
+          onClick={() => setIsPromoBarModalOpen(false)}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '2rem',
+              width: '100%',
+              maxWidth: '600px',
+              maxHeight: '90vh',
+              overflow: 'auto',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ margin: 0, marginBottom: '1.5rem', fontSize: '1.5rem', color: '#333', fontWeight: 'bold' }}>
+              프로모션 문구 설정
+            </h2>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: '#666' }}>
+                등록된 프로모션 문구를 관리하세요. 활성화된 문구들이 자동으로 순환하며 고객에게 노출됩니다.
+              </p>
+              {promoBarMessages.map((message, index) => (
+                <div
+                  key={message._id || `promo-message-${index}`}
+                  style={{
+                    border: '1px solid #eee',
+                    borderRadius: '8px',
+                    padding: '1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.75rem',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: '0.75rem',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.85rem', color: '#666', fontWeight: 500 }}>
+                      문구 {index + 1}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      <label
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem', color: '#555', cursor: 'pointer' }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={Boolean(message.isActive)}
+                          onChange={() => handleSetPromoBarActiveMessage(index)}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        활성화
+                      </label>
+                      <button
+                        onClick={() => handleRemovePromoBarMessage(index)}
+                        style={{
+                          padding: '0.35rem 0.75rem',
+                          border: '1px solid #ddd',
+                          borderRadius: '6px',
+                          backgroundColor: 'white',
+                          color: '#666',
+                          cursor: 'pointer',
+                          fontSize: '0.8rem',
+                        }}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    value={message.text}
+                    onChange={(e) => handleUpdatePromoBarMessage(index, e.target.value)}
+                    placeholder="프로모션 바에 표시할 문구를 입력하세요"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #ddd',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+              ))}
+
+              {promoBarMessages.length === 0 && (
+                <div
+                  style={{
+                    padding: '1rem',
+                    border: '1px dashed #ddd',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    color: '#888',
+                    textAlign: 'center',
+                  }}
+                >
+                  등록된 문구가 없습니다. 아래 입력란에 문구를 입력한 뒤 <strong>문구 추가</strong> 버튼을 눌러 등록하세요.
+                </div>
+              )}
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                gap: '0.75rem',
+                alignItems: 'center',
+                marginBottom: '1.5rem',
+                flexWrap: isMobile ? 'wrap' : 'nowrap',
+              }}
+            >
+              <input
+                type="text"
+                value={newPromoBarText}
+                onChange={(e) => setNewPromoBarText(e.target.value)}
+                placeholder="새로운 프로모션 문구를 입력하세요"
+                style={{
+                  flex: 1,
+                  minWidth: isMobile ? '100%' : 'auto',
+                  padding: '0.75rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  outline: 'none',
+                }}
+              />
+              <button
+                onClick={handleAddPromoBarMessage}
+                style={{
+                  padding: '0.75rem 1.25rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  backgroundColor: '#475569',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                문구 추가
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.9rem',
+                  color: '#666',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={promoBarActive}
+                  onChange={(e) => setPromoBarActive(e.target.checked)}
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    cursor: 'pointer',
+                  }}
+                />
+                <span>프로모션 바에 표시 (활성화)</span>
+              </label>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setIsPromoBarModalOpen(false)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  backgroundColor: 'white',
+                  color: '#333',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSavePromoBar}
+                disabled={promoBarLoading}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  backgroundColor: '#8B7355',
+                  color: 'white',
+                  cursor: promoBarLoading ? 'not-allowed' : 'pointer',
+                  fontSize: '0.9rem',
+                  opacity: promoBarLoading ? 0.6 : 1,
+                }}
+              >
+                {promoBarLoading ? '저장 중...' : '저장'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
