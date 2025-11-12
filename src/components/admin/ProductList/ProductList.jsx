@@ -9,7 +9,7 @@ const ProductList = () => {
   const [allProducts, setAllProducts] = useState([]); // 전체 상품 목록 (카테고리별 개수 계산용)
   const [selectedCategory, setSelectedCategory] = useState('ALL'); // 'ALL', 'OUTER', 'TOP', 'BOTTOM', 'DRESS', 'ACC'
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(2);
+  const [itemsPerPage] = useState(4);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -303,15 +303,18 @@ const ProductList = () => {
                             <img
                               src={product.image}
                               alt={product.name}
+                              onClick={() => navigate(`/products/${product._id}`)}
                               style={{
                                 width: '60px',
                                 height: '60px',
                                 objectFit: 'cover',
                                 borderRadius: '8px',
+                                cursor: 'pointer',
                               }}
                             />
                           ) : (
                             <div
+                              onClick={() => navigate(`/products/${product._id}`)}
                               style={{
                                 width: '60px',
                                 height: '60px',
@@ -322,6 +325,7 @@ const ProductList = () => {
                                 justifyContent: 'center',
                                 color: '#999',
                                 fontSize: '0.8rem',
+                                cursor: 'pointer',
                               }}
                             >
                               이미지 없음

@@ -97,6 +97,7 @@ const ProductEdit = () => {
                   addVariant={addVariant}
                   removeVariant={removeVariant}
                   isMobile={isMobile}
+                  baseSku={formData.sku}
                 />
               </div>
 

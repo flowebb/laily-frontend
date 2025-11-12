@@ -32,7 +32,7 @@ const MainPage = () => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
 
         if (data.products && Array.isArray(data.products)) {
@@ -476,8 +476,8 @@ const MainPage = () => {
                     }}
                   >
                     ♡
-                  </button>
-                </div>
+            </button>
+          </div>
                 <p style={{ margin: '0.5rem 0', fontSize: '0.9rem' }}>{product.name}</p>
                 <p style={{ margin: 0, fontSize: '0.9rem' }}>{formatPrice(product)}</p>
               </div>
@@ -688,12 +688,12 @@ const MainPage = () => {
                 }}
               >
                 <div
-                  style={{
+                style={{
                     position: 'relative',
-                    width: '100%',
+                  width: '100%',
                     paddingTop: '133%',
                     backgroundColor: '#f0f0f0',
-                    borderRadius: '8px',
+                  borderRadius: '8px',
                     overflow: 'hidden',
                     marginBottom: '0.5rem',
                   }}
@@ -725,11 +725,11 @@ const MainPage = () => {
                       width: '30px',
                       height: '30px',
                       cursor: 'pointer',
-                      fontSize: '1rem',
-                    }}
-                  >
+                  fontSize: '1rem',
+                }}
+              >
                     ♡
-                  </button>
+              </button>
                 </div>
                 <p style={{ margin: '0.5rem 0', fontSize: '0.9rem' }}>{product.name}</p>
                 <p style={{ margin: 0, fontSize: '0.9rem' }}>{formatPrice(product)}</p>

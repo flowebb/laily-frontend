@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export const useProductForm = () => {
@@ -27,11 +27,33 @@ export const useProductForm = () => {
   const [newVariant, setNewVariant] = useState({
     color: '',
     size: '',
-    stock: 0,
+    stock: '',
     image: '',
-    variantSku: ''
+    variantSku: '',
+    baseSku: '' // 기본 SKU를 추적하기 위한 필드
   });
   const [mainImageFile, setMainImageFile] = useState(null);
+
+  // formData.sku가 변경될 때 newVariant.variantSku를 자동으로 업데이트
+  useEffect(() => {
+    if (formData.sku) {
+      setNewVariant(prev => {
+        // variantSku가 비어있거나 이전 기본 SKU와 같으면 새 기본 SKU로 업데이트
+        // 사용자가 직접 다른 값을 입력한 경우는 보존
+        if (!prev.variantSku || prev.variantSku === prev.baseSku || !prev.baseSku) {
+          return {
+            ...prev,
+            variantSku: formData.sku,
+            baseSku: formData.sku
+          };
+        }
+        return {
+          ...prev,
+          baseSku: formData.sku
+        };
+      });
+    }
+  }, [formData.sku]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -97,7 +119,7 @@ export const useProductForm = () => {
     const { name, value } = e.target;
     setNewVariant(prev => ({
       ...prev,
-      [name]: name === 'stock' ? (value === '' ? 0 : parseInt(value) || 0) : value
+      [name]: name === 'stock' ? (value === '' ? '' : (isNaN(parseInt(value)) ? '' : parseInt(value))) : value
     }));
   };
 
@@ -119,7 +141,7 @@ export const useProductForm = () => {
     const variant = {
       ...newVariant,
       size: newVariant.size.toUpperCase(),
-      stock: parseInt(newVariant.stock) || 0
+      stock: newVariant.stock === '' ? 0 : (parseInt(newVariant.stock) || 0)
     };
 
     setVariants(prev => [...prev, variant]);
@@ -134,9 +156,10 @@ export const useProductForm = () => {
     setNewVariant({
       color: '',
       size: '',
-      stock: 0,
+      stock: '',
       image: '',
-      variantSku: ''
+      variantSku: formData.sku || '',
+      baseSku: formData.sku || ''
     });
   };
 

@@ -98,6 +98,7 @@ const ProductRegistration = () => {
                   addVariant={addVariant}
                   removeVariant={removeVariant}
                   isMobile={isMobile}
+                  baseSku={formData.sku}
                 />
               </div>
 

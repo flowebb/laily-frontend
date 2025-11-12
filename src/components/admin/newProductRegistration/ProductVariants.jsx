@@ -4,7 +4,8 @@ const ProductVariants = ({
   handleVariantChange, 
   addVariant, 
   removeVariant, 
-  isMobile 
+  isMobile,
+  baseSku 
 }) => {
   return (
     <div style={{ marginBottom: '1.8rem' }}>
@@ -70,7 +71,7 @@ const ProductVariants = ({
             <input
               type="number"
               name="stock"
-              value={newVariant.stock}
+              value={newVariant.stock === '' || newVariant.stock === 0 ? '' : newVariant.stock}
               onChange={handleVariantChange}
               placeholder="0"
               min="0"
@@ -89,9 +90,9 @@ const ProductVariants = ({
             <input
               type="text"
               name="variantSku"
-              value={newVariant.variantSku}
+              value={newVariant.variantSku || ''}
               onChange={handleVariantChange}
-              placeholder="SKU-001"
+              placeholder={baseSku || "SKU-001"}
               style={{
                 width: '100%',
                 padding: '0.6rem',

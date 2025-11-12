@@ -30,9 +30,31 @@ export const useProductEdit = () => {
     size: '',
     stock: 0,
     image: '',
-    variantSku: ''
+    variantSku: '',
+    baseSku: '' // 기본 SKU를 추적하기 위한 필드
   });
   const [mainImageFile, setMainImageFile] = useState(null);
+
+  // formData.sku가 변경될 때 newVariant.variantSku를 자동으로 업데이트
+  useEffect(() => {
+    if (formData.sku) {
+      setNewVariant(prev => {
+        // variantSku가 비어있거나 이전 기본 SKU와 같으면 새 기본 SKU로 업데이트
+        // 사용자가 직접 다른 값을 입력한 경우는 보존
+        if (!prev.variantSku || prev.variantSku === prev.baseSku || !prev.baseSku) {
+          return {
+            ...prev,
+            variantSku: formData.sku,
+            baseSku: formData.sku
+          };
+        }
+        return {
+          ...prev,
+          baseSku: formData.sku
+        };
+      });
+    }
+  }, [formData.sku]);
 
   // 기존 상품 정보 불러오기
   useEffect(() => {
@@ -45,19 +67,30 @@ export const useProductEdit = () => {
           const product = data.product;
           
           // 폼 데이터 설정
+          const sku = product.sku || '';
           setFormData({
             name: product.name || '',
             category: product.category || '',
             originalPrice: product.price?.originalPrice?.toString() || '',
             discountPercentage: product.price?.discountPercentage?.toString() || '',
             discountedPrice: product.price?.discountedPrice?.toString() || '',
-            sku: product.sku || '',
+            sku: sku,
             image: product.image || '',
             detailPage: product.detailPage || '',
             description: product.description || '',
             isNew: product.status?.includes('NEW') || false,
             isSale: product.status?.includes('SALE') || false,
             inStock: product.status?.includes('IN_STOCK') || false
+          });
+
+          // newVariant 초기화 시 기본 SKU 설정
+          setNewVariant({
+            color: '',
+            size: '',
+            stock: 0,
+            image: '',
+            variantSku: sku,
+            baseSku: sku
           });
 
           // Variants 설정
@@ -179,7 +212,8 @@ export const useProductEdit = () => {
       size: '',
       stock: 0,
       image: '',
-      variantSku: ''
+      variantSku: formData.sku || '',
+      baseSku: formData.sku || ''
     });
   };
 
